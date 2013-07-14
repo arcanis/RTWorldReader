@@ -20,11 +20,15 @@ Load a world from the input buffer.
 
 The callback parameter will be called when opportune with the specified context. It will get two parameters : the first will be any error which could have happened, and the second will be a `Node` object if the loading succeed.
 
+<hr />
+
 ### Importers
 
 #### new RTWorldLoader.ThreeEntity( worldNode )
 
 Returns a new Three.js entity, ready to be add in a scene.
+
+<hr />
 
 ### For developers
 
@@ -36,21 +40,21 @@ Enable or disable debug mode (default off). In debug mode, a lot of informations
 
 A `Node` is a jQuery-like object which has the following method :
 
-  * append( item1, ... )
-  * prepend( item1, ... )
-  * forEach( fn, context )
-  * map( fn, context )
-  * filter( fn, context )
-  * children( [ label ] )
-  * find( [ label ] )
-  * descendants( )
-  * prop( name )
+  * `append( item1, ... )`
+  * `prepend( item1, ... )`
+  * `forEach( fn, context )`
+  * `map( fn, context )`
+  * `filter( fn, context )`
+  * `children( [ label ] )`
+  * `find( label )`
+  * `descendants( )`
+  * `prop( name )`
 
-You should not have to manipulate nodes, except if you need to write your own importer. If you have to do it, consider looking at the source code of bundled importers to find out how to use them. But really, it's just like a jQuery object.
+You should not have to manipulate nodes, except if you need to write your own importer. If you have to do it, consider looking at the source code of bundled importers such as the [three.js one](https://github.com/arcanis/RTWorldReader/blob/master/sources/three.js) to find out how to use them. But really, it's just like a jQuery object.
 
 ## Examples
 
-You can see live examples [here](http://arcanis.github.io/RTWorldReader/examples/).
+You can see live examples [here](http://arcanis.github.io/RTWorldReader/examples/) (source code [here](https://github.com/arcanis/RTWorldReader/blob/master/example/sources/example.js)).
 
 ## License (MIT)
 
