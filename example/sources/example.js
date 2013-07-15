@@ -37,6 +37,7 @@
 
     RTWorldReader.debug.level = RTWorldReader.LOG_ERROR;
     RTWorldReader.debug.compiling = true;
+    RTWorldReader.debug.textures = true;
 
     RTWorldReader.loadUrl( 'assets/world.rtw', function ( err, worldNode ) {
         if ( err ) throw err;

@@ -129,23 +129,20 @@
     F.prototype = Parent.prototype;
     exports.ThreeEntity.prototype = new F;
     exports.ThreeEntity.prototype._apply8bSource = function (destination, source) {
-      source = new Int8Array(source);
+      source = new Uint8Array(source);
       copyArray(destination, source, 0, 4, 0, 3);
       copyArray(destination, source, 1, 4, 1, 3);
       copyArray(destination, source, 2, 4, 2, 3);
     };
     exports.ThreeEntity.prototype._apply8baData = function (destination, source) {
-      var inverse = function (source, offset) {
-        return 255 - source[offset];
-      };
-      source = new Int8Array(source);
+      source = new Uint8Array(source);
       copyArray(destination, source, 0, 4);
       copyArray(destination, source, 1, 4);
       copyArray(destination, source, 2, 4);
-      copyArray(destination, source, 3, 4, 3, 4, inverse);
+      copyArray(destination, source, 3, 4);
     };
     exports.ThreeEntity.prototype._apply8bmSource = function (destination, source) {
-      source = new Int8Array(source);
+      source = new Uint8Array(source);
       copyArray(destination, source, 0, 4, 0, 1);
       copyArray(destination, source, 1, 4, 0, 1);
       copyArray(destination, source, 2, 4, 0, 1);
