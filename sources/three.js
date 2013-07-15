@@ -154,8 +154,6 @@ exports.ThreeEntity.prototype._createImage = function ( width, height, format, d
     this._applyData( destination.data, format, data );
     context.putImageData( destination, 0, 0 );
 
-    document.body.appendChild( canvas );
-
     return canvas;
 
 };
@@ -176,6 +174,9 @@ exports.ThreeEntity.prototype._loadXtraTextures = function ( textureNodes ) {
         var texture = this._textures[ texn ] = new THREE.Texture( this._createImage( width, height, {
             0 : exports.ThreeEntity.FORMAT_8BA
         }[ format ], data ) );
+
+        texture.wrapS = THREE.RepeatWrapping;
+        texture.wrapT = THREE.RepeatWrapping;
 
         texture.needsUpdate = true;
 
@@ -329,9 +330,8 @@ exports.ThreeEntity.prototype._compileGeometry = function ( triangles ) {
             geometry.attributes.normal.array[ normalOffset + 2 ] = vertexData.nz;
 
             var uvOffset = firstOffset( geometry.attributes.uv );
-            var normalize = function ( n ) { n = n % 1; return n < 0 ? 1 + n : n; };
-            geometry.attributes.uv.array[ uvOffset + 0 ] = normalize( vertexData.st );
-            geometry.attributes.uv.array[ uvOffset + 1 ] = normalize( vertexData.tt );
+            geometry.attributes.uv.array[ uvOffset + 0 ] = vertexData.st;
+            geometry.attributes.uv.array[ uvOffset + 1 ] = vertexData.tt;
         } );
     } );
 
