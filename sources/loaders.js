@@ -21,21 +21,39 @@ var readChunks = function ( stack, dict, dataView ) {
         var chunk = lastChunk = { id : id, label : label, size : size, fullSize : size + 8, content : null };
 
         if ( ! dict.hasOwnProperty( label ) ) {
-            debug.warning( stack, 'Unrecognized label ' + label );
+
+            if ( debug.flags.loading )
+                debug.warning( 'Unrecognized ' + label + ' chunk -- ignored' );
+
             continue ;
+
         }
 
         if ( dict[ label ] && dict[ label ].constructor === Object ) {
-            debug.notice( stack, 'Entering label ' + label );
+
+            if ( debug.flags.loading )
+                debug.group( label + ' chunk' );
+
             var subDataView = new DataView( dataView.buffer, dataView.byteOffset + pointer + 8, dataView.byteLength - pointer - 8 );
             chunk.children = readChunks( stack.concat( [ label ] ), dict[ label ], subDataView );
-            debug.notice( stack, 'Leaving label ' + label );
+
+            if ( debug.flags.loading )
+                debug.groupEnd( );
+
         } else if (dict[ label ] && dict[ label ].constructor === String ) {
+
             chunk.content = parsers[ dict[ label ] ]( dataView, pointer + 8, size );
-            debug.notice( stack, 'Parsing ' + label + ' using ' + dict[ label ] + ' strategy (gives ' + chunk.content + ')' );
+
+            if ( debug.flags.loading )
+                debug.notice( 'Parsing ' + label + ' chunk using ' + dict[ label ] + ' strategy (gives ' + chunk.content + ')' );
+
         } else {
-            debug.notice( stack, 'Registering ' + label + ' data' );
-            chunk.content = new DataView( dataView.buffer, dataView.byteOffset + pointer + 8, size );
+
+            chunk.content = dataView.buffer.slice( dataView.byteOffset + pointer + 8, dataView.byteOffset + pointer + 8 + size );
+
+            if ( debug.flags.loading )
+                debug.notice( 'Registering ' + label + ' chunk as data buffer' );
+
         }
 
         chunks.push( chunk );
@@ -46,8 +64,14 @@ var readChunks = function ( stack, dict, dataView ) {
 
 exports.loadBuffer = function ( buffer, callback ) {
 
+    if ( debug.flags.loading )
+        debug.group( "World file loading", true );
+
     var dataView = new DataView( buffer, 0, buffer.byteLength );
     var chunks = readChunks( [ ], dictionaries.ROOT, dataView );
+
+    if ( debug.flags.loading )
+        debug.groupEnd( );
 
     callback( null, new tree.Node( { children : chunks } ) );
 

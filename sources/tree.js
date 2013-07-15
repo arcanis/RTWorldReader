@@ -31,7 +31,9 @@ Node.prototype.array = function ( ) {
 
 Node.prototype.prop = function ( name ) {
 
-    return this.get( )[ name ];
+    var element = this.get( );
+
+    return element ? element[ name ] : undefined;
 
 };
 

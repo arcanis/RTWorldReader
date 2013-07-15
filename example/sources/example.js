@@ -9,7 +9,10 @@
     camera.add( new THREE.PointLight( 0xffffff ) );
 
     var scene = new THREE.Scene( );
+    scene.add( new THREE.AxisHelper( 100 ) );
     scene.add( camera );
+
+    var clock = new THREE.Clock( );
 
     var draw = function ( ) {
         window.requestAnimationFrame( draw );
@@ -32,7 +35,9 @@
     window.addEventListener( 'load', load );
     window.addEventListener( 'resize', resize );
 
-    RTWorldReader.debugMode( true );
+    RTWorldReader.debug.level = RTWorldReader.LOG_ERROR;
+    RTWorldReader.debug.compiling = true;
+
     RTWorldReader.loadUrl( 'assets/world.rtw', function ( err, worldNode ) {
         if ( err ) throw err;
         scene.add( new RTWorldReader.ThreeEntity( worldNode ) );
