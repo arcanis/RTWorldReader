@@ -32,7 +32,7 @@ var readChunks = function ( stack, dict, dataView ) {
         if ( dict[ label ] && dict[ label ].constructor === Object ) {
 
             if ( debug.flags.loading )
-                debug.group( label + ' chunk' );
+                debug.group( label + ' chunk', true );
 
             var subDataView = new DataView( dataView.buffer, dataView.byteOffset + pointer + 8, dataView.byteLength - pointer - 8 );
             chunk.children = readChunks( stack.concat( [ label ] ), dict[ label ], subDataView );

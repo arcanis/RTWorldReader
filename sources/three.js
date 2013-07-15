@@ -52,7 +52,8 @@ exports.ThreeEntity = function ( root ) {
     this._loadXtraLightmaps( root
         .children( 'RTWF' )
         .children( 'XTRA' )
-        .children( 'LIMD' ) );
+        .children( 'LIMD' )
+        .children( 'LMAP' ) );
 
     this._loadXtraBrushes( root
         .children( 'RTWF' )
@@ -86,7 +87,7 @@ var F = function ( ) { };
 F.prototype = Parent.prototype;
 exports.ThreeEntity.prototype = new F( );
 
-exports.ThreeEntity.prototype._apply8bSource = function ( destination, source ) {
+exports.ThreeEntity.prototype._apply8bData = function ( destination, source ) {
     source = new Uint8Array( source );
     copyArray( destination, source, 0, 4, 0, 3 );
     copyArray( destination, source, 1, 4, 1, 3 );
@@ -101,7 +102,7 @@ exports.ThreeEntity.prototype._apply8baData = function ( destination, source ) {
     copyArray( destination, source, 3, 4 );
 };
 
-exports.ThreeEntity.prototype._apply8bmSource = function ( destination, source ) {
+exports.ThreeEntity.prototype._apply8bmData = function ( destination, source ) {
     source = new Uint8Array( source );
     copyArray( destination, source, 0, 4, 0, 1 );
     copyArray( destination, source, 1, 4, 0, 1 );
@@ -204,9 +205,12 @@ exports.ThreeEntity.prototype._loadXtraLightmaps = function ( lightmapNodes ) {
             3 : exports.ThreeEntity.FORMAT_8BM
         }[ format ], data ) );
 
+        texture.wrapS = THREE.RepeatWrapping;
+        texture.wrapT = THREE.RepeatWrapping;
+
         texture.needsUpdate = true;
 
-    } );
+    }, this );
 
 };
 
@@ -307,6 +311,10 @@ exports.ThreeEntity.prototype._compileGeometry = function ( triangles ) {
         uv : {
             itemSize : 2,
             array : new Float32Array( triangleCount * 3 * 2 ),
+            numItems : triangleCount * 3 * 2 },
+        uv2 : {
+            itemSize : 2,
+            array : new Float32Array( triangleCount * 3 * 2 ),
             numItems : triangleCount * 3 * 2 } };
 
     triangles.forEach( function ( vertices, triangleIndex ) {
@@ -332,6 +340,10 @@ exports.ThreeEntity.prototype._compileGeometry = function ( triangles ) {
             var uvOffset = firstOffset( geometry.attributes.uv );
             geometry.attributes.uv.array[ uvOffset + 0 ] = vertexData.st;
             geometry.attributes.uv.array[ uvOffset + 1 ] = vertexData.tt;
+
+            var uv2Offset = firstOffset( geometry.attributes.uv2 );
+            geometry.attributes.uv2.array[ uv2Offset + 0 ] = vertexData.sl;
+            geometry.attributes.uv2.array[ uv2Offset + 1 ] = vertexData.tl;
         } );
     } );
 

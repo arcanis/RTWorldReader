@@ -36,6 +36,7 @@
     window.addEventListener( 'resize', resize );
 
     RTWorldReader.debug.level = RTWorldReader.LOG_ERROR;
+    RTWorldReader.debug.loading = true;
     RTWorldReader.debug.compiling = true;
     RTWorldReader.debug.textures = true;
 

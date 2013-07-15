@@ -111,7 +111,7 @@
       debug.flags.compiling && debug.group('World generation (Three.js entity)');
       debug.flags.compiling && debug.group('Extra data extraction phase', true);
       this._loadXtraTextures(root.children('RTWF').children('XTRA').children('TEXD').children('TXTR'));
-      this._loadXtraLightmaps(root.children('RTWF').children('XTRA').children('LIMD'));
+      this._loadXtraLightmaps(root.children('RTWF').children('XTRA').children('LIMD').children('LMAP'));
       this._loadXtraBrushes(root.children('RTWF').children('XTRA').children('BGEO').children('BRSH'));
       debug.flags.compiling && debug.groupEnd();
       debug.flags.compiling && debug.group('Compilation phase');
@@ -128,7 +128,7 @@
     };
     F.prototype = Parent.prototype;
     exports.ThreeEntity.prototype = new F;
-    exports.ThreeEntity.prototype._apply8bSource = function (destination, source) {
+    exports.ThreeEntity.prototype._apply8bData = function (destination, source) {
       source = new Uint8Array(source);
       copyArray(destination, source, 0, 4, 0, 3);
       copyArray(destination, source, 1, 4, 1, 3);
@@ -141,7 +141,7 @@
       copyArray(destination, source, 2, 4);
       copyArray(destination, source, 3, 4);
     };
-    exports.ThreeEntity.prototype._apply8bmSource = function (destination, source) {
+    exports.ThreeEntity.prototype._apply8bmData = function (destination, source) {
       source = new Uint8Array(source);
       copyArray(destination, source, 0, 4, 0, 1);
       copyArray(destination, source, 1, 4, 0, 1);
@@ -221,8 +221,10 @@
             2: exports.ThreeEntity.FORMAT_32BF,
             3: exports.ThreeEntity.FORMAT_8BM
           }[format], data));
+        texture.wrapS = THREE.RepeatWrapping;
+        texture.wrapT = THREE.RepeatWrapping;
         texture.needsUpdate = true;
-      });
+      }, this);
     };
     exports.ThreeEntity.prototype._loadXtraBrushes = function (brushNodes) {
       var brushes = this._rawBrushes = {};
@@ -297,6 +299,11 @@
           itemSize: 2,
           array: new Float32Array(triangleCount * 3 * 2),
           numItems: triangleCount * 3 * 2
+        },
+        uv2: {
+          itemSize: 2,
+          array: new Float32Array(triangleCount * 3 * 2),
+          numItems: triangleCount * 3 * 2
         }
       };
       triangles.forEach(function (vertices, triangleIndex) {
@@ -318,6 +325,9 @@
           var uvOffset = firstOffset(geometry.attributes.uv);
           geometry.attributes.uv.array[uvOffset + 0] = vertexData.st;
           geometry.attributes.uv.array[uvOffset + 1] = vertexData.tt;
+          var uv2Offset = firstOffset(geometry.attributes.uv2);
+          geometry.attributes.uv2.array[uv2Offset + 0] = vertexData.sl;
+          geometry.attributes.uv2.array[uv2Offset + 1] = vertexData.tl;
         });
       });
       geometry.offsets = [{
@@ -509,7 +519,7 @@
         }
         if (dict[label] && dict[label].constructor === Object) {
           if (debug.flags.loading)
-            debug.group(label + ' chunk');
+            debug.group(label + ' chunk', true);
           var subDataView = new DataView(dataView.buffer, dataView.byteOffset + pointer + 8, dataView.byteLength - pointer - 8);
           chunk.children = readChunks(stack.concat([label]), dict[label], subDataView);
           if (debug.flags.loading)
@@ -674,6 +684,15 @@
           TWID: 'unsigned',
           THEI: 'unsigned',
           PFMT: 'unsigned',
+          DATA: null
+        }
+      },
+      LIMD: {
+        LMAP: {
+          LMID: 'signed',
+          LWID: 'unsigned',
+          LHEI: 'unsigned',
+          LFMT: 'unsigned',
           DATA: null
         }
       }

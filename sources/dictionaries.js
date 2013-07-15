@@ -67,6 +67,14 @@ exports.XTRA = {
             TWID : 'unsigned',
             THEI : 'unsigned',
             PFMT : 'unsigned',
+            DATA : null } },
+
+    LIMD : {
+        LMAP : {
+            LMID : 'signed',
+            LWID : 'unsigned',
+            LHEI : 'unsigned',
+            LFMT : 'unsigned',
             DATA : null } } };
 
 exports.ROOT = {
