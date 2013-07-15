@@ -26,15 +26,29 @@ The callback parameter will be called when opportune with the specified context.
 
 #### new RTWorldLoader.ThreeEntity( worldNode )
 
-Returns a new Three.js entity, ready to be inserted in a scene.
+Returns a new Three.js entity, ready to be inserted in a scene. You of course need to include Three.js in order to use this element.
 
 <hr />
 
 ### For developers
 
-#### RTWorldReader.debugMode( mode )
+#### RTWorldReader.debug
 
-Enable or disable debug mode (default off). In debug mode, a lot of informations will be output. This mode is mainly used when modifying the library itself, you hopefully shouldn't have to use it.
+Object containing the following debug flags that you can toggle to switch verbosity :
+
+  - `level`, can be one of the following :
+      - `RTWorldReader.LOG_NONE`
+      - `RTWorldReader.LOG_NOTICE`
+      - `RTWorldReader.LOG_WARNING`
+      - `RTWorldReader.LOG_ERROR`
+      - `RTWorldReader.LOG_FATAL`
+  - `loading`, boolean
+  - `compiling`, boolean
+  - `textures`, boolean
+  - `lightmaps`, boolean
+  - `brushes`, boolean
+
+You sometime have to switch on multiple flags to display some informations.
 
 #### new RTWorldReader.Node( [:] )
 
