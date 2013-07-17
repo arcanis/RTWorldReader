@@ -8,7 +8,7 @@ var scene = new THREE.Scene( );
 RTWorldReader.loadUrl( "assets/world.rtw", function ( err, worldNode ) {
     if ( err ) throw err;
 
-    var worldEntity = new RTWorldLoader.ThreeEntity( worldNode );
+    var worldEntity = new RTWorldReader.ThreeEntity( worldNode );
     scene.add( worldEntity );
 } );
 ```
@@ -33,15 +33,15 @@ The callback parameter will be called when opportune with the specified context.
 
 ### Importers
 
-#### new RTWorldLoader.ThreeEntity( worldNode )
+#### new RTWorldReader.ThreeEntity( worldNode )
 
 Returns a new Three.js entity, ready to be inserted in a scene. You of course need to include Three.js in order to use this element. Each entity named in the world editor will be available threw one of the following properties (`#` means 'instance') :
 
-- `RTWorldLoader.ThreeEntity#groups` (`AENT` chunks)
-- `RTWorldLoader.ThreeEntity#lights` (`PLGT` chunks)
-- `RTWorldLoader.ThreeEntity#entities` (`UENT` chunks)
+- `RTWorldReader.ThreeEntity#groups` (`AENT` chunks)
+- `RTWorldReader.ThreeEntity#lights` (`PLGT` chunks)
+- `RTWorldReader.ThreeEntity#entities` (`UENT` chunks)
 
-You can also use `RTWorldLoader.ThreeEntity#all`, which will contains a full map of the entities, regardless their type. Please note that entities other that groups, lights and user entities are not registed at all.
+You can also use `RTWorldReader.ThreeEntity#all`, which will contains a full map of the entities, regardless their type. Please note that entities other that groups, lights and user entities are not registed at all.
 
 <hr />
 
