@@ -75,9 +75,9 @@ A node instance is a jQuery-like object which has the following method :
 
 You should not have to manipulate nodes, except if you need to write your own importer. If that's what you're looking for, consider looking at the source code of bundled importers such as the [three.js one](https://github.com/arcanis/RTWorldReader/blob/master/sources/three.js) to find out how to use them. But really, it's just like a jQuery object.
 
-## Examples
+## Example
 
-You can see live examples [here](http://arcanis.github.io/RTWorldReader/examples/) (source code [here](https://github.com/arcanis/RTWorldReader/blob/master/example/sources/example.js)).
+You can see a live example [here](http://arcanis.github.io/RTWorldReader/example/) (source code [here](https://github.com/arcanis/RTWorldReader/blob/master/example/sources/example.js)).
 
 ![Demonstration](http://www.clipular.com/c?10640001=JDV8JImJjOLmcgfDx49dES4s0us&f=.png)
 
