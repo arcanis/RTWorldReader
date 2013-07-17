@@ -5,7 +5,7 @@ RTWorldReader is a javascript library parsing `.rtw` files, such as the ones gen
 ```js
 var scene = new THREE.Scene( );
 
-RTWorldLoader.loadUrl( "assets/world.rtw", function ( err, worldNode ) {
+RTWorldReader.loadUrl( "assets/world.rtw", function ( err, worldNode ) {
     if ( err ) throw err;
 
     var worldEntity = new RTWorldLoader.ThreeEntity( worldNode );
