@@ -26,13 +26,13 @@ The callback parameter will be called when opportune with the specified context.
 
 #### new RTWorldLoader.ThreeEntity( worldNode )
 
-Returns a new Three.js entity, ready to be inserted in a scene. You of course need to include Three.js in order to use this element. Each entity named in the world editor will be available threw one of the following properties :
+Returns a new Three.js entity, ready to be inserted in a scene. You of course need to include Three.js in order to use this element. Each entity named in the world editor will be available threw one of the following properties (`#` means 'instance') :
 
-- `RTWorldLoader#groups` (`AENT` chunks)
-- `RTWorldLoader#lights` (`PLGT` chunks)
-- `RTWorldLoader#entities` (`UENT` chunks)
+- `RTWorldLoader.ThreeEntity#groups` (`AENT` chunks)
+- `RTWorldLoader.ThreeEntity#lights` (`PLGT` chunks)
+- `RTWorldLoader.ThreeEntity#entities` (`UENT` chunks)
 
-You can also use `RTWorldLoader#all`, which will contains a full map of the entities, regardless their type. Please note that entities other that groups, lights and user entities are not registed at all.
+You can also use `RTWorldLoader.ThreeEntity#all`, which will contains a full map of the entities, regardless their type. Please note that entities other that groups, lights and user entities are not registed at all.
 
 <hr />
 
