@@ -8,6 +8,7 @@
     camera.lookAt( new THREE.Vector3( 0, 0, 0 ) );
 
     var scene = new THREE.Scene( );
+    scene.add( new THREE.AmbientLight( 0x252525 ) );
     scene.add( camera );
 
     var clock = new THREE.Clock( );
@@ -32,12 +33,6 @@
 
     window.addEventListener( 'load', load );
     window.addEventListener( 'resize', resize );
-
-    RTWorldReader.debug.level = RTWorldReader.LOG_ERROR;
-    RTWorldReader.debug.loading = true;
-    RTWorldReader.debug.compiling = true;
-    RTWorldReader.debug.textures = true;
-    RTWorldReader.debug.lightmaps = true;
 
     RTWorldReader.loadUrl( 'assets/world.rtw', function ( err, worldNode ) {
         if ( err ) throw err;

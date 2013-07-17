@@ -6,10 +6,13 @@ RTWorldReader is a javascript library parsing `.rtw` files, such as the ones gen
 var scene = new THREE.Scene( );
 
 RTWorldReader.loadUrl( "assets/world.rtw", function ( err, worldNode ) {
-    if ( err ) throw err;
+
+    if ( err )
+        throw err;
 
     var worldEntity = new RTWorldReader.ThreeEntity( worldNode );
     scene.add( worldEntity );
+
 } );
 ```
 
@@ -90,7 +93,7 @@ You should not have to manipulate nodes, except if you need to write your own im
 
 You can see a live example [here](http://arcanis.github.io/RTWorldReader/example/) (source code [here](https://github.com/arcanis/RTWorldReader/blob/master/example/sources/example.js)).
 
-![Demonstration](http://www.clipular.com/c?10640001=JDV8JImJjOLmcgfDx49dES4s0us&f=.png)
+![Demonstration](http://www.clipular.com/c?10643005=O4CDZaomPAtl8uZ4Akwy1UYHgTM&f=.png)
 
 ## License (MIT)
 
