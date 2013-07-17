@@ -1,6 +1,7 @@
 exports.ECHI = {
     AENT : {
-        IFID : 'unsigned' },
+        IFID : 'unsigned',
+        ENAM : 'string' },
 
     BRSH : {
         IFID : 'unsigned',
@@ -22,16 +23,19 @@ exports.ECHI = {
 
     PLGT : {
         IFID : 'unsigned',
+        ENAM : 'string',
         POSX : 'float',
         POSY : 'float',
         POSZ : 'float',
         RADI : 'float',
         COLR : 'float',
         COLG : 'float',
-        COLB : 'float' },
+        COLB : 'float',
+        LMUL : 'float' },
 
     UENT : {
         IFID : 'unsigned',
+        ENAM : 'string',
         POSX : 'float',
         POSY : 'float',
         POSZ : 'float',
@@ -39,8 +43,6 @@ exports.ECHI = {
 
 exports.WRLD = {
     IFID : 'unsigned',
-    ENAM : 'string',
-    HIDE : 'boolean',
 
     TXPU : 'float',
     NOTS : 'boolean',

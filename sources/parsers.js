@@ -15,11 +15,13 @@ exports.boolean = function ( dataView, offset, length ) {
 };
 
 exports.string = function ( dataView, offset, length ) {
-    var utf16 = new ArrayBuffer( length * 2 );
+    var strlen = dataView.getUint32( offset, true );
+
+    var utf16 = new ArrayBuffer( strlen * 2 );
     var utf16View = new Uint16Array( utf16 );
 
-    for ( var i = 0; i < length; ++ i )
-        utf16View[ i ] = dataView.getUint8( offset + i );
+    for ( var i = 0; i < strlen; ++ i )
+        utf16View[ i ] = dataView.getUint8( offset + 4 + i );
 
     return String.fromCharCode.apply( String, utf16View );
 };

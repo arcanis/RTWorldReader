@@ -6,10 +6,8 @@
     camera.position.set( 1000, 1000, 1000 );
     camera.updateMatrixWorld( );
     camera.lookAt( new THREE.Vector3( 0, 0, 0 ) );
-    camera.add( new THREE.PointLight( 0xffffff ) );
 
     var scene = new THREE.Scene( );
-    scene.add( new THREE.AxisHelper( 100 ) );
     scene.add( camera );
 
     var clock = new THREE.Clock( );
@@ -39,10 +37,22 @@
     RTWorldReader.debug.loading = true;
     RTWorldReader.debug.compiling = true;
     RTWorldReader.debug.textures = true;
+    RTWorldReader.debug.lightmaps = true;
 
     RTWorldReader.loadUrl( 'assets/world.rtw', function ( err, worldNode ) {
         if ( err ) throw err;
-        scene.add( new RTWorldReader.ThreeEntity( worldNode ) );
+
+        var world = new RTWorldReader.ThreeEntity( worldNode );
+        scene.add( world );
+
+        if ( world.entities.p1 ) {
+            camera.position.copy( world.entities.p1.position );
+            camera.updateMatrixWorld( );
+        }
+
+        if ( world.entities.p1target ) {
+            camera.lookAt( world.entities.p1target.position );
+        }
     } );
 
 } )( );

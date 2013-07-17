@@ -91,13 +91,24 @@
         map = function (source, offset) {
           return source[offset];
         };
-      var iterationsD = Math.floor((destination.length - offsetD) / paddingD);
-      var iterationsS = Math.floor((source.length - offsetS) / paddingS);
+      var iterationsD = Math.ceil((destination.length - offsetD) / paddingD);
+      var iterationsS = Math.ceil((source.length - offsetS) / paddingS);
       var iterations = Math.min(iterationsD, iterationsS);
       while (iterations--) {
         destination[offsetD] = map(source, offsetS);
         offsetD += paddingD;
         offsetS += paddingS;
+      }
+    };
+    var setArray = function (destination, value, offset, padding) {
+      if (typeof offset === 'undefined')
+        offset = 0;
+      if (typeof padding === 'undefined')
+        padding = 1;
+      var iterations = Math.ceil((destination.length - offset) / padding);
+      while (iterations--) {
+        destination[offset] = value;
+        offset += padding;
       }
     };
     var Parent = typeof THREE === 'undefined' ? function () {
@@ -108,6 +119,10 @@
       this._textures = {};
       this._lightmaps = [];
       this._rawBrushes = {};
+      this.groups = {};
+      this.lights = {};
+      this.entities = {};
+      this.all = {};
       debug.flags.compiling && debug.group('World generation (Three.js entity)');
       debug.flags.compiling && debug.group('Extra data extraction phase', true);
       this._loadXtraTextures(root.children('RTWF').children('XTRA').children('TEXD').children('TXTR'));
@@ -115,7 +130,7 @@
       this._loadXtraBrushes(root.children('RTWF').children('XTRA').children('BGEO').children('BRSH'));
       debug.flags.compiling && debug.groupEnd();
       debug.flags.compiling && debug.group('Compilation phase');
-      this._compileBrushes(root.children('RTWF').children('WRLD').children('ECHI').children('BRSH'));
+      this._traverseEchi(this, root.children('RTWF').children('WRLD').children('ECHI'));
       debug.flags.compiling && debug.groupEnd();
       debug.flags.compiling && debug.groupEnd();
     };
@@ -133,6 +148,7 @@
       copyArray(destination, source, 0, 4, 0, 3);
       copyArray(destination, source, 1, 4, 1, 3);
       copyArray(destination, source, 2, 4, 2, 3);
+      setArray(destination, 255, 3, 4);
     };
     exports.ThreeEntity.prototype._apply8baData = function (destination, source) {
       source = new Uint8Array(source);
@@ -146,6 +162,7 @@
       copyArray(destination, source, 0, 4, 0, 1);
       copyArray(destination, source, 1, 4, 0, 1);
       copyArray(destination, source, 2, 4, 0, 1);
+      setArray(destination, 255, 3, 4);
     };
     exports.ThreeEntity.prototype._apply16bffData = function (destination, source) {
       var unfix = function (source, offset) {
@@ -155,12 +172,14 @@
       copyArray(destination, source, 0, 4, 0, 6, unfix);
       copyArray(destination, source, 1, 4, 2, 6, unfix);
       copyArray(destination, source, 2, 4, 4, 6, unfix);
+      setArray(destination, 255, 3, 4);
     };
     exports.ThreeEntity.prototype._apply32bfData = function (destination, source) {
       source = new Float32Array(source);
       copyArray(destination, source, 0, 4, 0, 3);
       copyArray(destination, source, 1, 4, 1, 3);
       copyArray(destination, source, 2, 4, 2, 3);
+      setArray(destination, 255, 3, 4);
     };
     exports.ThreeEntity.prototype._applyData = function (destination, format, source) {
       switch (format) {
@@ -193,11 +212,11 @@
     };
     exports.ThreeEntity.prototype._loadXtraTextures = function (textureNodes) {
       textureNodes.forEach(function (textureNode) {
-        var texn = textureNode.children('TEXN').prop('content');
-        var width = textureNode.children('TWID').prop('content');
-        var height = textureNode.children('THEI').prop('content');
-        var format = textureNode.children('PFMT').prop('content');
-        var data = textureNode.children('DATA').prop('content');
+        var texn = textureNode.content('TEXN');
+        var width = textureNode.content('TWID');
+        var height = textureNode.content('THEI');
+        var format = textureNode.content('PFMT');
+        var data = textureNode.content('DATA');
         if (debug.flags.compiling && debug.flags.textures)
           debug.notice('Extracting data from texture "' + texn + '" (' + width + 'x' + height + ')');
         var texture = this._textures[texn] = new THREE.Texture(this._createImage(width, height, { 0: exports.ThreeEntity.FORMAT_8BA }[format], data));
@@ -208,13 +227,13 @@
     };
     exports.ThreeEntity.prototype._loadXtraLightmaps = function (lightmapNodes) {
       lightmapNodes.forEach(function (lightmapNode) {
-        var lmid = lightmapNode.children('LMID').prop('content');
-        var width = lightmapNode.children('LWID').prop('content');
-        var height = lightmapNode.children('LHEI').prop('content');
-        var format = lightmapNode.children('LFMT').prop('content');
-        var data = lightmapNode.children('DATA').prop('content');
+        var lmid = lightmapNode.content('LMID');
+        var width = lightmapNode.content('LWID');
+        var height = lightmapNode.content('LHEI');
+        var format = lightmapNode.content('LFMT');
+        var data = lightmapNode.content('DATA');
         if (debug.flags.compiling && debug.flags.lightmaps)
-          debug.notice('Extracting data from texture #' + lmid + ' (' + width + 'x' + height + ')');
+          debug.notice('Extracting data from lightmap #' + lmid + ' (' + width + 'x' + height + ')');
         var texture = this._lightmaps[lmid] = new THREE.Texture(this._createImage(width, height, {
             0: exports.ThreeEntity.FORMAT_8B,
             1: exports.ThreeEntity.FORMAT_16BFF,
@@ -229,15 +248,15 @@
     exports.ThreeEntity.prototype._loadXtraBrushes = function (brushNodes) {
       var brushes = this._rawBrushes = {};
       brushNodes.forEach(function (brushNode) {
-        var ifid = brushNode.children('IFID').prop('content');
+        var ifid = brushNode.content('IFID');
         var brush0Entry = brushes[ifid] = {};
         if (debug.flags.compiling && debug.flags.brushes)
           debug.notice('Extracting geometry from brush #' + ifid);
         brushNodes.children('FACE').forEach(function (faceNode) {
-          var texn = faceNode.children('TEXN').prop('content');
+          var texn = faceNode.content('TEXN');
           var brush1Entry = brush0Entry[texn] = brush0Entry[texn] || {};
           faceNode.children('SUBF').forEach(function (subfNode) {
-            var lmid = faceNode.children('LMID').prop('content') || '';
+            var lmid = subfNode.content('LMID') || '';
             var brush2Entry = brush1Entry[lmid] = brush1Entry[lmid] || [];
             triangulate(subfNode.children('VERT')).forEach(function (triangle) {
               brush2Entry.push(triangle);
@@ -246,9 +265,24 @@
         });
       });
     };
-    exports.ThreeEntity.prototype._compileBrushes = function (brushNodes) {
+    exports.ThreeEntity.prototype._traverseEchi = function (element, echiNode) {
+      this._compileBrushes(element, echiNode.children('BRSH'));
+      this._initLights(element, echiNode.children('PLGT'));
+      this._registerUserEntities(element, echiNode.children('UENT'));
+      echiNode.children('AENT').forEach(function (aentNode) {
+        var newElement = new THREE.Object3;
+        if (aentNode.has('ENAM')) {
+          var name = aentNode.content('ENAM');
+          this.groups[name] = newElement;
+          this.all[name] = newElement;
+        }
+        element.add(newElement);
+        this._traverseEchi(newElement, aentNode.children('ECHI'));
+      }, this);
+    };
+    exports.ThreeEntity.prototype._compileBrushes = function (element, brushNodes) {
       brushNodes.forEach(function (brushNode) {
-        var ifid = brushNode.children('IFID').prop('content');
+        var ifid = brushNode.content('IFID');
         var rawBrush = this._rawBrushes[ifid];
         if (debug.flags.compiling)
           debug.assert(rawBrush, "Raw brush data wasn't found in file. Did you forget to save extra data (BGEO chunk) ?");
@@ -268,10 +302,11 @@
             if (lightmap)
               materialData.lightmap = lightmap;
             var geometry = this._compileGeometry(rawBrush[texn][lmid]);
-            var material = new THREE.MeshLambertMaterial(materialData);
+            var material = new THREE.MeshPhongMaterial(materialData);
             if (debug.flags.compiling)
               debug.notice('One more mesh in the world bucket');
-            this.add(new THREE.Mesh(geometry, material));
+            var mesh = new THREE.Mesh(geometry, material);
+            element.add(mesh);
           }, this);
         }, this);
       }, this);
@@ -311,7 +346,7 @@
           var firstOffset = function (attribute) {
             return (triangleIndex * 3 + vertexIndex) * attribute.itemSize;
           };
-          var vertexData = vertexNode.prop('content');
+          var vertexData = vertexNode.content();
           var indexOffset = firstOffset(geometry.attributes.index);
           geometry.attributes.index.array[indexOffset] = indexOffset;
           var positionOffset = firstOffset(geometry.attributes.position);
@@ -324,10 +359,10 @@
           geometry.attributes.normal.array[normalOffset + 2] = vertexData.nz;
           var uvOffset = firstOffset(geometry.attributes.uv);
           geometry.attributes.uv.array[uvOffset + 0] = vertexData.st;
-          geometry.attributes.uv.array[uvOffset + 1] = vertexData.tt;
+          geometry.attributes.uv.array[uvOffset + 1] = -vertexData.tt;
           var uv2Offset = firstOffset(geometry.attributes.uv2);
           geometry.attributes.uv2.array[uv2Offset + 0] = vertexData.sl;
-          geometry.attributes.uv2.array[uv2Offset + 1] = vertexData.tl;
+          geometry.attributes.uv2.array[uv2Offset + 1] = -vertexData.tl;
         });
       });
       geometry.offsets = [{
@@ -337,6 +372,43 @@
         }];
       geometry.computeBoundingSphere();
       return geometry;
+    };
+    exports.ThreeEntity.prototype._initLights = function (element, lightNodes) {
+      lightNodes.forEach(function (lightNode) {
+        var light = new THREE.PointLight;
+        if (lightNode.has('ENAM')) {
+          var name = lightNode.content('ENAM');
+          this.lights[name] = light;
+          this.all[name] = light;
+        }
+        light.position.x = lightNode.content('POSX');
+        light.position.y = lightNode.content('POSY');
+        light.position.z = lightNode.content('POSZ');
+        light.color.r = lightNode.content('COLR');
+        light.color.g = lightNode.content('COLG');
+        light.color.b = lightNode.content('COLB');
+        light.intensity = lightNode.content('LMUL');
+        light.distance = lightNode.content('RADI');
+        element.add(light);
+        if (debug.flags.compiling)
+          debug.notice('One more light in the world bucket');
+      }, this);
+    };
+    exports.ThreeEntity.prototype._registerUserEntities = function (element, uentNodes) {
+      uentNodes.forEach(function (uentNode) {
+        var entity = new THREE.Object3D;
+        if (uentNode.has('ENAM')) {
+          var name = uentNode.content('ENAM');
+          this.entities[name] = entity;
+          this.all[name] = entity;
+        }
+        entity.position.x = uentNode.content('POSX');
+        entity.position.y = uentNode.content('POSY');
+        entity.position.z = uentNode.content('POSZ');
+        element.add(entity);
+        if (debug.flags.compiling)
+          debug.notice('One more entity in the world bucket');
+      }, this);
     };
   });
   require.define('/sources/debug.js', function (module, exports, __dirname, __filename) {
@@ -405,6 +477,9 @@
     Node.prototype.prop = function (name) {
       var element = this.get();
       return element ? element[name] : undefined;
+    };
+    Node.prototype.content = function (name) {
+      return name ? this.children(name).prop('content') : this.prop('content');
     };
     Node.prototype.get = function (n) {
       return this._set[n || 0];
@@ -484,8 +559,11 @@
     Node.prototype.find = function () {
       var labels = Array.prototype.slice.call(arguments);
       return this.descendants().filter(function (node) {
-        return labels.indexOf[node.prop('label')] !== -1;
+        return labels.indexOf(node.prop('label')) !== -1;
       });
+    };
+    Node.prototype.has = function (label) {
+      return !this.children(label).empty();
     };
     exports.Node = Node;
   });
@@ -570,10 +648,11 @@
       return dataView.getUint8(offset) !== 0;
     };
     exports.string = function (dataView, offset, length) {
-      var utf16 = new ArrayBuffer(length * 2);
+      var strlen = dataView.getUint32(offset, true);
+      var utf16 = new ArrayBuffer(strlen * 2);
       var utf16View = new Uint16Array(utf16);
-      for (var i = 0; i < length; ++i)
-        utf16View[i] = dataView.getUint8(offset + i);
+      for (var i = 0; i < strlen; ++i)
+        utf16View[i] = dataView.getUint8(offset + 4 + i);
       return String.fromCharCode.apply(String, utf16View);
     };
     exports.vertice = function (dataView, offset, length) {
@@ -612,7 +691,10 @@
   });
   require.define('/sources/dictionaries.js', function (module, exports, __dirname, __filename) {
     exports.ECHI = {
-      AENT: { IFID: 'unsigned' },
+      AENT: {
+        IFID: 'unsigned',
+        ENAM: 'string'
+      },
       BRSH: {
         IFID: 'unsigned',
         TYPE: 'unsigned'
@@ -633,16 +715,19 @@
       },
       PLGT: {
         IFID: 'unsigned',
+        ENAM: 'string',
         POSX: 'float',
         POSY: 'float',
         POSZ: 'float',
         RADI: 'float',
         COLR: 'float',
         COLG: 'float',
-        COLB: 'float'
+        COLB: 'float',
+        LMUL: 'float'
       },
       UENT: {
         IFID: 'unsigned',
+        ENAM: 'string',
         POSX: 'float',
         POSY: 'float',
         POSZ: 'float',
@@ -651,8 +736,6 @@
     };
     exports.WRLD = {
       IFID: 'unsigned',
-      ENAM: 'string',
-      HIDE: 'boolean',
       TXPU: 'float',
       NOTS: 'boolean',
       NOTE: 'string',

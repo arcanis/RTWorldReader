@@ -37,6 +37,14 @@ Node.prototype.prop = function ( name ) {
 
 };
 
+Node.prototype.content = function ( name ) {
+
+    return name
+        ? this.children( name ).prop( 'content' )
+        : this.prop( 'content' );
+
+};
+
 Node.prototype.get = function ( n ) {
 
     return this._set[ n || 0 ];
@@ -165,8 +173,14 @@ Node.prototype.find = function ( ) {
     var labels = Array.prototype.slice.call( arguments );
 
     return this.descendants( ).filter( function ( node ) {
-        return labels.indexOf[ node.prop( 'label' ) ] !== - 1;
+        return labels.indexOf( node.prop( 'label' ) ) !== - 1;
     } );
+
+};
+
+Node.prototype.has = function ( label ) {
+
+    return ! this.children( label ).empty( );
 
 };
 

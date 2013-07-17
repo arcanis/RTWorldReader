@@ -16,14 +16,26 @@ var copyArray = function ( destination, source, offsetD, paddingD, offsetS, padd
     if ( typeof paddingS === 'undefined' ) paddingS = paddingD;
     if ( typeof map === 'undefined' )      map = function ( source, offset ) { return source[ offset ]; };
 
-    var iterationsD = Math.floor( ( destination.length - offsetD ) / paddingD );
-    var iterationsS = Math.floor( ( source.length - offsetS ) / paddingS );
+    var iterationsD = Math.ceil( ( destination.length - offsetD ) / paddingD );
+    var iterationsS = Math.ceil( ( source.length - offsetS ) / paddingS );
     var iterations = Math.min( iterationsD, iterationsS );
 
     while ( iterations -- ) {
         destination[ offsetD ] = map( source, offsetS );
         offsetD += paddingD;
         offsetS += paddingS;
+    }
+};
+
+var setArray = function ( destination, value, offset, padding ) {
+    if ( typeof offset === 'undefined' )  offset = 0;
+    if ( typeof padding === 'undefined' ) padding = 1;
+
+    var iterations = Math.ceil( ( destination.length - offset ) / padding );
+
+    while ( iterations -- ) {
+        destination[ offset ] = value;
+        offset += padding;
     }
 };
 
@@ -38,6 +50,12 @@ exports.ThreeEntity = function ( root ) {
     this._textures = { };
     this._lightmaps = [ ];
     this._rawBrushes = { };
+
+    this.groups = { };
+    this.lights = { };
+    this.entities = { };
+
+    this.all = { };
 
     debug.flags.compiling && debug.group( "World generation (Three.js entity)" );
 
@@ -65,11 +83,10 @@ exports.ThreeEntity = function ( root ) {
 
     debug.flags.compiling && debug.group( "Compilation phase" );
 
-    this._compileBrushes( root
+    this._traverseEchi( this, root
         .children( 'RTWF' )
         .children( 'WRLD' )
-        .children( 'ECHI' )
-        .children( 'BRSH' ) );
+        .children( 'ECHI' ) );
 
     debug.flags.compiling && debug.groupEnd( );
 
@@ -92,6 +109,7 @@ exports.ThreeEntity.prototype._apply8bData = function ( destination, source ) {
     copyArray( destination, source, 0, 4, 0, 3 );
     copyArray( destination, source, 1, 4, 1, 3 );
     copyArray( destination, source, 2, 4, 2, 3 );
+    setArray( destination, 255, 3, 4 );
 };
 
 exports.ThreeEntity.prototype._apply8baData = function ( destination, source ) {
@@ -107,6 +125,7 @@ exports.ThreeEntity.prototype._apply8bmData = function ( destination, source ) {
     copyArray( destination, source, 0, 4, 0, 1 );
     copyArray( destination, source, 1, 4, 0, 1 );
     copyArray( destination, source, 2, 4, 0, 1 );
+    setArray( destination, 255, 3, 4 );
 };
 
 exports.ThreeEntity.prototype._apply16bffData = function ( destination, source ) {
@@ -115,6 +134,7 @@ exports.ThreeEntity.prototype._apply16bffData = function ( destination, source )
     copyArray( destination, source, 0, 4, 0, 6, unfix );
     copyArray( destination, source, 1, 4, 2, 6, unfix );
     copyArray( destination, source, 2, 4, 4, 6, unfix );
+    setArray( destination, 255, 3, 4 );
 };
 
 exports.ThreeEntity.prototype._apply32bfData = function ( destination, source ) {
@@ -122,6 +142,7 @@ exports.ThreeEntity.prototype._apply32bfData = function ( destination, source ) 
     copyArray( destination, source, 0, 4, 0, 3 );
     copyArray( destination, source, 1, 4, 1, 3 );
     copyArray( destination, source, 2, 4, 2, 3 );
+    setArray( destination, 255, 3, 4 );
 };
 
 exports.ThreeEntity.prototype._applyData = function ( destination, format, source ) {
@@ -163,11 +184,11 @@ exports.ThreeEntity.prototype._loadXtraTextures = function ( textureNodes ) {
 
     textureNodes.forEach( function ( textureNode ) {
 
-        var texn = textureNode.children( 'TEXN' ).prop( 'content' );
-        var width = textureNode.children( 'TWID' ).prop( 'content' );
-        var height = textureNode.children( 'THEI' ).prop( 'content' );
-        var format = textureNode.children( 'PFMT' ).prop( 'content' );
-        var data = textureNode.children( 'DATA' ).prop( 'content' );
+        var texn = textureNode.content( 'TEXN' );
+        var width = textureNode.content( 'TWID' );
+        var height = textureNode.content( 'THEI' );
+        var format = textureNode.content( 'PFMT' );
+        var data = textureNode.content( 'DATA' );
 
         if ( debug.flags.compiling && debug.flags.textures )
             debug.notice( "Extracting data from texture \"" + texn + "\" (" + width + "x" + height + ")" );
@@ -189,14 +210,14 @@ exports.ThreeEntity.prototype._loadXtraLightmaps = function ( lightmapNodes ) {
 
     lightmapNodes.forEach( function ( lightmapNode ) {
 
-        var lmid = lightmapNode.children( 'LMID' ).prop( 'content' );
-        var width = lightmapNode.children( 'LWID' ).prop( 'content' );
-        var height = lightmapNode.children( 'LHEI' ).prop( 'content' );
-        var format = lightmapNode.children( 'LFMT' ).prop( 'content' );
-        var data = lightmapNode.children( 'DATA' ).prop( 'content' );
+        var lmid = lightmapNode.content( 'LMID' );
+        var width = lightmapNode.content( 'LWID' );
+        var height = lightmapNode.content( 'LHEI' );
+        var format = lightmapNode.content( 'LFMT' );
+        var data = lightmapNode.content( 'DATA' );
 
         if ( debug.flags.compiling && debug.flags.lightmaps )
-            debug.notice( "Extracting data from texture #" + lmid + " (" + width + "x" + height + ")" );
+            debug.notice( "Extracting data from lightmap #" + lmid + " (" + width + "x" + height + ")" );
 
         var texture = this._lightmaps[ lmid ] = new THREE.Texture( this._createImage( width, height, {
             0 : exports.ThreeEntity.FORMAT_8B,
@@ -220,7 +241,7 @@ exports.ThreeEntity.prototype._loadXtraBrushes = function ( brushNodes ) {
 
     brushNodes.forEach( function ( brushNode ) {
 
-        var ifid = brushNode.children( 'IFID' ).prop( 'content' );
+        var ifid = brushNode.content( 'IFID' );
         var brush0Entry = brushes[ ifid ] = { };
 
         if ( debug.flags.compiling && debug.flags.brushes )
@@ -228,12 +249,12 @@ exports.ThreeEntity.prototype._loadXtraBrushes = function ( brushNodes ) {
 
         brushNodes.children( 'FACE' ).forEach( function ( faceNode ) {
 
-            var texn = faceNode.children( 'TEXN' ).prop( 'content' );
+            var texn = faceNode.content( 'TEXN' );
             var brush1Entry = brush0Entry[ texn ] = ( brush0Entry[ texn ] || { } );
 
             faceNode.children( 'SUBF' ).forEach( function ( subfNode ) {
 
-                var lmid = faceNode.children( 'LMID' ).prop( 'content' ) || '';
+                var lmid = subfNode.content( 'LMID' ) || '';
                 var brush2Entry = brush1Entry[ lmid ] = ( brush1Entry[ lmid ] || [ ] );
 
                 triangulate( subfNode.children( 'VERT' ) ).forEach( function ( triangle ) {
@@ -248,10 +269,36 @@ exports.ThreeEntity.prototype._loadXtraBrushes = function ( brushNodes ) {
 
 };
 
-exports.ThreeEntity.prototype._compileBrushes = function ( brushNodes ) {
+exports.ThreeEntity.prototype._traverseEchi = function ( element, echiNode ) {
+
+    this._compileBrushes( element, echiNode.children( 'BRSH' ) );
+
+    this._initLights( element, echiNode.children( 'PLGT' ) );
+
+    this._registerUserEntities( element, echiNode.children( 'UENT' ) );
+
+    echiNode.children( 'AENT' ).forEach( function ( aentNode ) {
+
+        var newElement = new THREE.Object3( );
+
+        if ( aentNode.has( 'ENAM' ) ) {
+            var name = aentNode.content( 'ENAM' );
+            this.groups[ name ] = newElement;
+            this.all[ name ] = newElement;
+        }
+
+        element.add( newElement );
+
+        this._traverseEchi( newElement, aentNode.children( 'ECHI' ) );
+
+    }, this );
+
+};
+
+exports.ThreeEntity.prototype._compileBrushes = function ( element, brushNodes ) {
 
     brushNodes.forEach( function ( brushNode ) {
-        var ifid = brushNode.children( 'IFID' ).prop( 'content' );
+        var ifid = brushNode.content( 'IFID' );
         var rawBrush = this._rawBrushes[ ifid ];
 
         if ( debug.flags.compiling )
@@ -262,6 +309,7 @@ exports.ThreeEntity.prototype._compileBrushes = function ( brushNodes ) {
 
         Object.keys( rawBrush ).forEach( function ( texn ) {
             Object.keys( rawBrush[ texn ] ).forEach( function ( lmid ) {
+
                 var texture = this._textures[ texn ];
                 var lightmap = this._lightmaps[ lmid ];
 
@@ -278,12 +326,15 @@ exports.ThreeEntity.prototype._compileBrushes = function ( brushNodes ) {
                 if ( lightmap ) materialData.lightmap = lightmap;
 
                 var geometry = this._compileGeometry( rawBrush[ texn ][ lmid ] );
-                var material = new THREE.MeshLambertMaterial( materialData );
+                var material = new THREE.MeshPhongMaterial( materialData );
 
                 if ( debug.flags.compiling )
                     debug.notice( "One more mesh in the world bucket" );
 
-                this.add( new THREE.Mesh( geometry, material ) );
+                var mesh = new THREE.Mesh( geometry, material );
+
+                element.add( mesh );
+
             }, this );
         }, this );
     }, this );
@@ -319,10 +370,11 @@ exports.ThreeEntity.prototype._compileGeometry = function ( triangles ) {
 
     triangles.forEach( function ( vertices, triangleIndex ) {
         vertices.forEach( function ( vertexNode, vertexIndex ) {
+
             var firstOffset = function ( attribute ) {
                 return ( triangleIndex * 3 + vertexIndex ) * attribute.itemSize; };
 
-            var vertexData = vertexNode.prop( 'content' );
+            var vertexData = vertexNode.content( );
 
             var indexOffset = firstOffset( geometry.attributes.index );
             geometry.attributes.index.array[ indexOffset ] = indexOffset;
@@ -339,11 +391,12 @@ exports.ThreeEntity.prototype._compileGeometry = function ( triangles ) {
 
             var uvOffset = firstOffset( geometry.attributes.uv );
             geometry.attributes.uv.array[ uvOffset + 0 ] = vertexData.st;
-            geometry.attributes.uv.array[ uvOffset + 1 ] = vertexData.tt;
+            geometry.attributes.uv.array[ uvOffset + 1 ] = - vertexData.tt;
 
             var uv2Offset = firstOffset( geometry.attributes.uv2 );
             geometry.attributes.uv2.array[ uv2Offset + 0 ] = vertexData.sl;
-            geometry.attributes.uv2.array[ uv2Offset + 1 ] = vertexData.tl;
+            geometry.attributes.uv2.array[ uv2Offset + 1 ] = - vertexData.tl;
+
         } );
     } );
 
@@ -356,5 +409,62 @@ exports.ThreeEntity.prototype._compileGeometry = function ( triangles ) {
     geometry.computeBoundingSphere( );
 
     return geometry;
+
+};
+
+exports.ThreeEntity.prototype._initLights = function ( element, lightNodes ) {
+
+    lightNodes.forEach( function ( lightNode ) {
+
+        var light = new THREE.PointLight( );
+
+        if ( lightNode.has( 'ENAM' ) ) {
+            var name = lightNode.content( 'ENAM' );
+            this.lights[ name ] = light;
+            this.all[ name ] = light;
+        }
+
+        light.position.x = lightNode.content( 'POSX' );
+        light.position.y = lightNode.content( 'POSY' );
+        light.position.z = lightNode.content( 'POSZ' );
+
+        light.color.r = lightNode.content( 'COLR' );
+        light.color.g = lightNode.content( 'COLG' );
+        light.color.b = lightNode.content( 'COLB' );
+
+        light.intensity = lightNode.content( 'LMUL' );
+        light.distance = lightNode.content( 'RADI' );
+
+        element.add( light );
+
+        if ( debug.flags.compiling )
+            debug.notice( "One more light in the world bucket" );
+
+    }, this );
+
+};
+
+exports.ThreeEntity.prototype._registerUserEntities = function ( element, uentNodes ) {
+
+    uentNodes.forEach( function ( uentNode ) {
+
+        var entity = new THREE.Object3D( );
+
+        if ( uentNode.has( 'ENAM' ) ) {
+            var name = uentNode.content( 'ENAM' );
+            this.entities[ name ] = entity;
+            this.all[ name ] = entity;
+        }
+
+        entity.position.x = uentNode.content( 'POSX' );
+        entity.position.y = uentNode.content( 'POSY' );
+        entity.position.z = uentNode.content( 'POSZ' );
+
+        element.add( entity );
+
+        if ( debug.flags.compiling )
+            debug.notice( "One more entity in the world bucket" );
+
+    }, this );
 
 };

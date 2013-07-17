@@ -26,7 +26,13 @@ The callback parameter will be called when opportune with the specified context.
 
 #### new RTWorldLoader.ThreeEntity( worldNode )
 
-Returns a new Three.js entity, ready to be inserted in a scene. You of course need to include Three.js in order to use this element.
+Returns a new Three.js entity, ready to be inserted in a scene. You of course need to include Three.js in order to use this element. Each entity named in the world editor will be available threw one of the following properties :
+
+- `RTWorldLoader#groups` (`AENT` chunks)
+- `RTWorldLoader#lights` (`PLGT` chunks)
+- `RTWorldLoader#entities` (`UENT` chunks)
+
+You can also use `RTWorldLoader#all`, which will contains a full map of the entities, regardless their type. Please note that entities other that groups, lights and user entities are not registed at all.
 
 <hr />
 
@@ -54,6 +60,10 @@ You sometime have to switch on multiple flags to display some informations.
 
 A node instance is a jQuery-like object which has the following method :
 
+  * `array( )`
+  * `get( [ n ] )`
+  * `at( [ n ] )`
+  * `slice( [ begin [, end ] ] )`
   * `append( item1, ... )`
   * `prepend( item1, ... )`
   * `forEach( fn, context )`
@@ -63,12 +73,15 @@ A node instance is a jQuery-like object which has the following method :
   * `find( label )`
   * `descendants( )`
   * `prop( name )`
+  * `content( [ label ] )`
 
 You should not have to manipulate nodes, except if you need to write your own importer. If that's what you're looking for, consider looking at the source code of bundled importers such as the [three.js one](https://github.com/arcanis/RTWorldReader/blob/master/sources/three.js) to find out how to use them. But really, it's just like a jQuery object.
 
 ## Examples
 
 You can see live examples [here](http://arcanis.github.io/RTWorldReader/examples/) (source code [here](https://github.com/arcanis/RTWorldReader/blob/master/example/sources/example.js)).
+
+![Demonstration](http://www.clipular.com/c?10640001=JDV8JImJjOLmcgfDx49dES4s0us&f=.png)
 
 ## License (MIT)
 
