@@ -1,15 +1,18 @@
 var debug = require( './debug' );
 
 var triangulate = function ( verticeNodes ) {
+
     var vertices = [ ];
 
     for ( var t = 2, T = verticeNodes.count( ); t < T; ++ t )
         vertices.push( [ verticeNodes.at( 0 ), verticeNodes.at( t - 1 ), verticeNodes.at( t ) ] );
 
     return vertices;
+
 };
 
 var copyArray = function ( destination, source, offsetD, paddingD, offsetS, paddingS, map ) {
+
     if ( typeof offsetD === 'undefined' )  offsetD = 0;
     if ( typeof paddingD === 'undefined' ) paddingD = 1;
     if ( typeof offsetS === 'undefined' )  offsetS = offsetD;
@@ -25,9 +28,11 @@ var copyArray = function ( destination, source, offsetD, paddingD, offsetS, padd
         offsetD += paddingD;
         offsetS += paddingS;
     }
+
 };
 
 var setArray = function ( destination, value, offset, padding ) {
+
     if ( typeof offset === 'undefined' )  offset = 0;
     if ( typeof padding === 'undefined' ) padding = 1;
 
@@ -37,6 +42,7 @@ var setArray = function ( destination, value, offset, padding ) {
         destination[ offset ] = value;
         offset += padding;
     }
+
 };
 
 var Parent = typeof THREE === 'undefined'
@@ -104,77 +110,127 @@ var F = function ( ) { };
 F.prototype = Parent.prototype;
 exports.ThreeEntity.prototype = new F( );
 
-exports.ThreeEntity.prototype._apply8bData = function ( destination, source ) {
+exports.ThreeEntity.prototype._apply8bData = function ( destination, source, useFloats ) {
+
+    var map = useFloats ? function ( source, offset ) { return source[ offset ] / 0xFF; } : undefined;
+
     source = new Uint8Array( source );
-    copyArray( destination, source, 0, 4, 0, 3 );
-    copyArray( destination, source, 1, 4, 1, 3 );
-    copyArray( destination, source, 2, 4, 2, 3 );
-    setArray( destination, 255, 3, 4 );
+
+    copyArray( destination, source, 0, 4, 0, 3, map );
+    copyArray( destination, source, 1, 4, 1, 3, map );
+    copyArray( destination, source, 2, 4, 2, 3, map );
+    setArray( destination, useFloats ? 1.0 : 0xFF, 3, 4 );
+
 };
 
-exports.ThreeEntity.prototype._apply8baData = function ( destination, source ) {
+exports.ThreeEntity.prototype._apply8baData = function ( destination, source, useFloats ) {
+
+    var map = useFloats ? function ( source, offset ) { return source[ offset ] / 0xFF; } : undefined;
+
     source = new Uint8Array( source );
-    copyArray( destination, source, 0, 4 );
-    copyArray( destination, source, 1, 4 );
-    copyArray( destination, source, 2, 4 );
-    copyArray( destination, source, 3, 4 );
+
+    copyArray( destination, source, 0, 4, map );
+    copyArray( destination, source, 1, 4, map );
+    copyArray( destination, source, 2, 4, map );
+    copyArray( destination, source, 3, 4, map );
+
 };
 
-exports.ThreeEntity.prototype._apply8bmData = function ( destination, source ) {
+exports.ThreeEntity.prototype._apply8bmData = function ( destination, source, useFloats ) {
+
+    var map = useFloats ? function ( source, offset ) { return source[ offset ] / 0xFF; } : undefined;
+
     source = new Uint8Array( source );
-    copyArray( destination, source, 0, 4, 0, 1 );
-    copyArray( destination, source, 1, 4, 0, 1 );
-    copyArray( destination, source, 2, 4, 0, 1 );
-    setArray( destination, 255, 3, 4 );
+
+    copyArray( destination, source, 0, 4, 0, 1, map );
+    copyArray( destination, source, 1, 4, 0, 1, map );
+    copyArray( destination, source, 2, 4, 0, 1, map );
+    setArray( destination, useFloats ? 1.0 : 0xFF, 3, 4 );
+
 };
 
-exports.ThreeEntity.prototype._apply16bffData = function ( destination, source ) {
-    var unfix = function ( source, offset ) { return ( source[ offset ] | ( source[ offset + 1 ] << 8 ) ) / 256; };
+exports.ThreeEntity.prototype._apply16bffData = function ( destination, source, useFloats ) {
+
+    var merge = function ( source, offset ) { return source[ offset ] | ( source[ offset + 1 ] << 8 ); };
+    var map = useFloats ? function ( source, offset ) { return merge( source, offset ) / 0xFFFF; } : merge;
+
     source = new Uint8Array( source );
-    copyArray( destination, source, 0, 4, 0, 6, unfix );
-    copyArray( destination, source, 1, 4, 2, 6, unfix );
-    copyArray( destination, source, 2, 4, 4, 6, unfix );
-    setArray( destination, 255, 3, 4 );
+    copyArray( destination, source, 0, 4, 0, 6, map );
+    copyArray( destination, source, 1, 4, 2, 6, map );
+    copyArray( destination, source, 2, 4, 4, 6, map );
+    setArray( destination, useFloats ? 1.0 : 0xFF, 3, 4 );
+
 };
 
-exports.ThreeEntity.prototype._apply32bfData = function ( destination, source ) {
+exports.ThreeEntity.prototype._apply32bfData = function ( destination, source, useFloats ) {
+
+    var map = useFloats ? undefined : function ( source, offset ) { return Math.floor( source[ offset ] * 0xFF ); };
+
     source = new Float32Array( source );
-    copyArray( destination, source, 0, 4, 0, 3 );
-    copyArray( destination, source, 1, 4, 1, 3 );
-    copyArray( destination, source, 2, 4, 2, 3 );
-    setArray( destination, 255, 3, 4 );
+
+    copyArray( destination, source, 0, 4, 0, 3, map );
+    copyArray( destination, source, 1, 4, 1, 3, map );
+    copyArray( destination, source, 2, 4, 2, 3, map );
+    setArray( destination, useFloats ? 1.0 : 0xFF, 3, 4 );
+
 };
 
-exports.ThreeEntity.prototype._applyData = function ( destination, format, source ) {
+exports.ThreeEntity.prototype._applyData = function ( destination, source, format, useFloats ) {
     switch ( format ) {
         case exports.ThreeEntity.FORMAT_8B:
-            this._apply8bData( destination, source );
+            this._apply8bData( destination, source, useFloats );
         break;
         case exports.ThreeEntity.FORMAT_8BA:
-            this._apply8baData( destination, source );
+            this._apply8baData( destination, source, useFloats );
         break;
         case exports.ThreeEntity.FORMAT_8BM:
-            this._apply8bmData( destination, source );
+            this._apply8bmData( destination, source, useFloats );
         break;
         case exports.ThreeEntity.FORMAT_16BFF:
-            this._apply16bffData( destination, source );
+            this._apply16bffData( destination, source, useFloats );
         break;
         case exports.ThreeEntity.FORMAT_32BF:
-            this._apply32bfData( destination, source );
+            this._apply32bfData( destination, source, useFloats );
         break;
     }
 };
 
-exports.ThreeEntity.prototype._createImage = function ( width, height, format, data ) {
+exports.ThreeEntity.prototype._createTexture = function ( data, width, height, format, useFloats ) {
+
+    var filteredType = useFloats ? Float32Array : Uint8Array;
+    var filteredData = new filteredType( width * height * 4 );
+
+    this._applyData( filteredData, data, format, useFloats );
+
+    var texture = new THREE.DataTexture( filteredData, width, height );
+
+    texture.format = THREE.RGBAFormat;
+    texture.type = useFloats ? THREE.FloatType : THREE.UnsignedByteType;
+
+    texture.minFilter = THREE.LinearFilter;
+    texture.magFilter = THREE.LinearFilter;
+
+    texture.generateMipmaps = false;
+
+    return texture;
+
+};
+
+exports.ThreeEntity.prototype._createImage = function ( data, width, height, format ) {
 
     var canvas = document.createElement( 'canvas' );
-    canvas.width = width; canvas.height = height;
-
     var context = canvas.getContext( '2d' );
 
+    canvas.width = width;
+    canvas.height = height;
+
     var destination = context.createImageData( canvas.width, canvas.height );
-    this._applyData( destination.data, format, data );
+
+    var x = this._createTexture( data, width, height, format, false ).image.data;
+    destination.data.set( x );
     context.putImageData( destination, 0, 0 );
+
+    console.log( destination.data );
 
     return canvas;
 
@@ -193,9 +249,9 @@ exports.ThreeEntity.prototype._loadXtraTextures = function ( textureNodes ) {
         if ( debug.flags.compiling && debug.flags.textures )
             debug.notice( "Extracting data from texture \"" + texn + "\" (" + width + "x" + height + ")" );
 
-        var texture = this._textures[ texn ] = new THREE.Texture( this._createImage( width, height, {
+        var texture = this._textures[ texn ] = this._createTexture( data, width, height, {
             0 : exports.ThreeEntity.FORMAT_8BA
-        }[ format ], data ) );
+        }[ format ], false );
 
         texture.wrapS = THREE.RepeatWrapping;
         texture.wrapT = THREE.RepeatWrapping;
@@ -219,15 +275,14 @@ exports.ThreeEntity.prototype._loadXtraLightmaps = function ( lightmapNodes ) {
         if ( debug.flags.compiling && debug.flags.lightmaps )
             debug.notice( "Extracting data from lightmap #" + lmid + " (" + width + "x" + height + ")" );
 
-        var texture = this._lightmaps[ lmid ] = new THREE.Texture( this._createImage( width, height, {
+        var texture = this._lightmaps[ lmid ] = this._createTexture( data, width, height, {
             0 : exports.ThreeEntity.FORMAT_8B,
             1 : exports.ThreeEntity.FORMAT_16BFF,
             2 : exports.ThreeEntity.FORMAT_32BF,
             3 : exports.ThreeEntity.FORMAT_8BM
-        }[ format ], data ) );
+        }[ format ], true );
 
-        texture.wrapS = THREE.RepeatWrapping;
-        texture.wrapT = THREE.RepeatWrapping;
+        console.log( texture.image.data );
 
         texture.needsUpdate = true;
 
@@ -308,7 +363,7 @@ exports.ThreeEntity.prototype._compileBrushes = function ( element, brushNodes )
             return ;
 
         Object.keys( rawBrush ).forEach( function ( texn ) {
-            Object.keys( rawBrush[ texn ] ).forEach( function ( lmid ) {
+            Object.keys( rawBrush[ texn ] ).forEach( function ( lmid, index ) {
 
                 var texture = this._textures[ texn ];
                 var lightmap = this._lightmaps[ lmid ];
@@ -323,7 +378,7 @@ exports.ThreeEntity.prototype._compileBrushes = function ( element, brushNodes )
                     return ;
 
                 var materialData = { map : texture };
-                if ( lightmap ) materialData.lightmap = lightmap;
+                if ( lightmap ) materialData.lightMap = lightmap;
 
                 var geometry = this._compileGeometry( rawBrush[ texn ][ lmid ] );
                 var material = new THREE.MeshPhongMaterial( materialData );
@@ -345,8 +400,7 @@ exports.ThreeEntity.prototype._compileGeometry = function ( triangles ) {
 
     var triangleCount = triangles.length;
 
-    var geometry = new THREE.BufferGeometry( );
-    geometry.attributes = {
+    var attributes = {
         index : {
             itemSize : 1,
             array : new Uint16Array( triangleCount * 3 ),
@@ -376,31 +430,46 @@ exports.ThreeEntity.prototype._compileGeometry = function ( triangles ) {
 
             var vertexData = vertexNode.content( );
 
-            var indexOffset = firstOffset( geometry.attributes.index );
-            geometry.attributes.index.array[ indexOffset ] = indexOffset;
+            var indexOffset = firstOffset( attributes.index );
+            attributes.index.array[ indexOffset ] = indexOffset;
 
-            var positionOffset = firstOffset( geometry.attributes.position );
-            geometry.attributes.position.array[ positionOffset + 0 ] = vertexData.x;
-            geometry.attributes.position.array[ positionOffset + 1 ] = vertexData.y;
-            geometry.attributes.position.array[ positionOffset + 2 ] = vertexData.z;
+            var positionOffset = firstOffset( attributes.position );
+            attributes.position.array[ positionOffset + 0 ] = vertexData.x;
+            attributes.position.array[ positionOffset + 1 ] = vertexData.y;
+            attributes.position.array[ positionOffset + 2 ] = vertexData.z;
 
-            var normalOffset = firstOffset( geometry.attributes.normal );
-            geometry.attributes.normal.array[ normalOffset + 0 ] = vertexData.nx;
-            geometry.attributes.normal.array[ normalOffset + 1 ] = vertexData.ny;
-            geometry.attributes.normal.array[ normalOffset + 2 ] = vertexData.nz;
+            var normalOffset = firstOffset( attributes.normal );
+            attributes.normal.array[ normalOffset + 0 ] = vertexData.nx;
+            attributes.normal.array[ normalOffset + 1 ] = vertexData.ny;
+            attributes.normal.array[ normalOffset + 2 ] = vertexData.nz;
 
-            var uvOffset = firstOffset( geometry.attributes.uv );
-            geometry.attributes.uv.array[ uvOffset + 0 ] = vertexData.st;
-            geometry.attributes.uv.array[ uvOffset + 1 ] = - vertexData.tt;
+            var uvOffset = firstOffset( attributes.uv );
+            attributes.uv.array[ uvOffset + 0 ] = vertexData.st;
+            attributes.uv.array[ uvOffset + 1 ] = vertexData.tt;
 
-            var uv2Offset = firstOffset( geometry.attributes.uv2 );
-            geometry.attributes.uv2.array[ uv2Offset + 0 ] = vertexData.sl;
-            geometry.attributes.uv2.array[ uv2Offset + 1 ] = - vertexData.tl;
+            var uv2Offset = firstOffset( attributes.uv2 );
+            attributes.uv2.array[ uv2Offset + 0 ] = vertexData.sl;
+            attributes.uv2.array[ uv2Offset + 1 ] = vertexData.tl;
 
         } );
     } );
 
-    geometry.offsets = [ {
+    var geometry = new THREE.BufferGeometry( );
+
+    Object.keys( attributes ).forEach( function ( name ) {
+
+        var attribute = attributes[ name ];
+        var bufferAttribute = new THREE.BufferAttribute( attribute.array, attribute.itemSize );
+
+        if ( name === 'index' ) {
+            geometry.setIndex( bufferAttribute );
+        } else {
+            geometry.addAttribute( name, bufferAttribute );
+        }
+
+    } );
+
+    geometry.groups = [ {
         start : 0,
         count : triangleCount * 3,
         index : 0
@@ -423,6 +492,8 @@ exports.ThreeEntity.prototype._initLights = function ( element, lightNodes ) {
             this.lights[ name ] = light;
             this.all[ name ] = light;
         }
+
+        light.visible = false;
 
         light.position.x = lightNode.content( 'POSX' );
         light.position.y = lightNode.content( 'POSY' );

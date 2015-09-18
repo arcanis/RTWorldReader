@@ -1,6 +1,11 @@
-( function ( ) {
+window.addEventListener( 'load', function ( ) {
 
-    var renderer = new THREE.WebGLRenderer( );
+    var renderer = new THREE.WebGLRenderer( { alpha : true, antialias : true } );
+    renderer.setClearColor( 0xFFFFFF );
+    renderer.setClearAlpha( 0 );
+
+    renderer.context.getExtension( 'OES_texture_float' );
+    renderer.context.getExtension( 'OES_texture_float_linear' );
 
     var camera = new THREE.PerspectiveCamera( 60, 1, .1, 10000 );
     camera.position.set( 1000, 1000, 1000 );
@@ -8,7 +13,6 @@
     camera.lookAt( new THREE.Vector3( 0, 0, 0 ) );
 
     var scene = new THREE.Scene( );
-    scene.add( new THREE.AmbientLight( 0x252525 ) );
     scene.add( camera );
 
     var clock = new THREE.Clock( );
@@ -31,23 +35,28 @@
         draw( );
     };
 
-    window.addEventListener( 'load', load );
-    window.addEventListener( 'resize', resize );
+    load( );
+    resize( );
 
-    RTWorldReader.loadUrl( 'assets/world.rtw', function ( err, worldNode ) {
-        if ( err ) throw err;
+    RTWorldReader.loadUrl( 'assets/tut06.rtw', function ( err, worldNode ) {
+
+        if ( err )
+            throw err;
 
         var world = new RTWorldReader.ThreeEntity( worldNode );
         scene.add( world );
 
-        if ( world.entities.p1 ) {
-            camera.position.copy( world.entities.p1.position );
+        if ( world.all.p1 ) {
+            camera.position.copy( world.all.p1.position );
             camera.updateMatrixWorld( );
         }
 
-        if ( world.entities.p1target ) {
-            camera.lookAt( world.entities.p1target.position );
+        if ( world.all.p1target ) {
+            camera.lookAt( world.all.p1target.position );
+        } else {
+            camera.lookAt( new THREE.Vector3( 0, 0, 0 ) );
         }
+
     } );
 
-} )( );
+} );

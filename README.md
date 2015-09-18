@@ -16,6 +16,10 @@ RTWorldReader.loadUrl( "assets/world.rtw", function ( err, worldNode ) {
 } );
 ```
 
+**Important:** RTWorldReader only works with the latest version of Runtime World! Unfortunately, the latest release has been made in 2012, so you will have to build the editor yourself.
+
+**Important:** Don't forget to save your maps with their extra data (BGEO, TEXD & LIMD).
+
 ## API
 
 ### Standard

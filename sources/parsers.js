@@ -27,22 +27,34 @@ exports.string = function ( dataView, offset, length ) {
 };
 
 exports.vertice = function ( dataView, offset, length ) {
+
     var vertice = { };
 
     vertice.x = dataView.getFloat64( offset, true ); offset += 8;
     vertice.y = dataView.getFloat64( offset, true ); offset += 8;
     vertice.z = dataView.getFloat64( offset, true ); offset += 8;
+
     vertice.nx = dataView.getFloat64( offset, true ); offset += 8;
     vertice.ny = dataView.getFloat64( offset, true ); offset += 8;
     vertice.nz = dataView.getFloat64( offset, true ); offset += 8;
+
     vertice.st = dataView.getFloat64( offset, true ); offset += 8;
     vertice.tt = dataView.getFloat64( offset, true ); offset += 8;
+
     vertice.r = dataView.getFloat64( offset, true ); offset += 8;
     vertice.g = dataView.getFloat64( offset, true ); offset += 8;
     vertice.b = dataView.getFloat64( offset, true ); offset += 8;
-    vertice.sl = offset < length ? dataView.getFloat64( offset, true ) : null; offset += 8;
-    vertice.tl = offset < length ? dataView.getFloat64( offset, true ) : null; offset += 8;
+
+    if ( length >= 11 * 8 ) {
+        vertice.sl = dataView.getFloat64( offset, true ); offset += 8;
+        vertice.tl = dataView.getFloat64( offset, true ); offset += 8;
+    } else {
+        vertice.sl = null;
+        vertice.tl = null;
+    }
 
     vertice.toString = function ( ) { return JSON.stringify( this ); };
+
     return vertice;
+
 };

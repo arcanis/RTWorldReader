@@ -2,8 +2,14 @@
 <html>
     <head>
         <title>RTWorldReader example</title>
-        <script src="vendors/Three.js"></script>
+        <script src="https://cdn.rawgit.com/mrdoob/three.js/r72/build/three.js"></script>
         <script src="../RTWorldReader.js"></script>
+        <script>RTWorldReader.debug.level = 100;</script>
+        <script>RTWorldReader.debug.loading = true;</script>
+        <script>RTWorldReader.debug.compiling = true;</script>
+        <script>RTWorldReader.debug.textures = true;</script>
+        <script>RTWorldReader.debug.lightmaps = true;</script>
+        <script>RTWorldReader.debug.brushes = true;</script>
         <script src="sources/example.js"></script>
         <link rel="stylesheet" href="assets/style.css" />
     </head>
