@@ -10,6 +10,7 @@ var stringify = function ( int32 ) {
         + String.fromCharCode( ( int32 >> 24 ) & 0xFF ); };
 
 var readChunks = function ( stack, dict, dataView ) {
+
     var chunks = [ ], lastChunk;
 
     for ( var pointer = 0; pointer < dataView.byteLength; pointer += lastChunk.fullSize ) {
@@ -60,33 +61,49 @@ var readChunks = function ( stack, dict, dataView ) {
     }
 
     return chunks;
-};
-
-exports.loadBuffer = function ( buffer, callback ) {
-
-    if ( debug.flags.loading )
-        debug.group( "World file loading", true );
-
-    var dataView = new DataView( buffer, 0, buffer.byteLength );
-    var chunks = readChunks( [ ], dictionaries.ROOT, dataView );
-
-    if ( debug.flags.loading )
-        debug.groupEnd( );
-
-    callback( null, new tree.Node( { children : chunks } ) );
 
 };
 
-exports.loadUrl = function ( url, callback ) {
+exports.loadBuffer = function ( buffer ) {
 
-    var xhr = new XMLHttpRequest( );
-    xhr.open( 'GET', url, true );
+    return new Promise( function ( resolve, reject ) {
 
-    xhr.responseType = 'arraybuffer';
-    xhr.onload = function ( event ) {
-        exports.loadBuffer( xhr.response, callback );
-    };
+        if ( debug.flags.loading )
+            debug.group( "World file loading", true );
 
-    xhr.send( null );
+        var dataView = new DataView( buffer, 0, buffer.byteLength );
+        var chunks = readChunks( [ ], dictionaries.ROOT, dataView );
+
+        if ( debug.flags.loading )
+            debug.groupEnd( );
+
+        resolve( new tree.Node( { children : chunks } ) );
+
+    } );
+
+};
+
+exports.loadUrl = function ( url ) {
+
+    return new Promise( function ( resolve, reject ) {
+
+        var xhr = new XMLHttpRequest( );
+
+        xhr.open( 'GET', url, true );
+        xhr.responseType = 'arraybuffer';
+
+        xhr.addEventListener( 'load', function ( event ) {
+
+            exports.loadBuffer( xhr.response ).then( function ( success ) {
+                resolve( success );
+            }, function ( error ) {
+                reject( error );
+            } );
+
+        } );
+
+        xhr.send( null );
+
+    } );
 
 };

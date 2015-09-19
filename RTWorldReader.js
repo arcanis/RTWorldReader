@@ -653,23 +653,31 @@
       }
       return chunks;
     };
-    exports.loadBuffer = function (buffer, callback) {
-      if (debug.flags.loading)
-        debug.group('World file loading', true);
-      var dataView = new DataView(buffer, 0, buffer.byteLength);
-      var chunks = readChunks([], dictionaries.ROOT, dataView);
-      if (debug.flags.loading)
-        debug.groupEnd();
-      callback(null, new tree.Node({ children: chunks }));
+    exports.loadBuffer = function (buffer) {
+      return new Promise(function (resolve, reject) {
+        if (debug.flags.loading)
+          debug.group('World file loading', true);
+        var dataView = new DataView(buffer, 0, buffer.byteLength);
+        var chunks = readChunks([], dictionaries.ROOT, dataView);
+        if (debug.flags.loading)
+          debug.groupEnd();
+        resolve(new tree.Node({ children: chunks }));
+      });
     };
-    exports.loadUrl = function (url, callback) {
-      var xhr = new XMLHttpRequest;
-      xhr.open('GET', url, true);
-      xhr.responseType = 'arraybuffer';
-      xhr.onload = function (event) {
-        exports.loadBuffer(xhr.response, callback);
-      };
-      xhr.send(null);
+    exports.loadUrl = function (url) {
+      return new Promise(function (resolve, reject) {
+        var xhr = new XMLHttpRequest;
+        xhr.open('GET', url, true);
+        xhr.responseType = 'arraybuffer';
+        xhr.addEventListener('load', function (event) {
+          exports.loadBuffer(xhr.response).then(function (success) {
+            resolve(success);
+          }, function (error) {
+            reject(error);
+          });
+        });
+        xhr.send(null);
+      });
     };
   });
   require.define('/sources/parsers.js', function (module, exports, __dirname, __filename) {

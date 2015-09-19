@@ -38,10 +38,7 @@ window.addEventListener( 'load', function ( ) {
     load( );
     resize( );
 
-    RTWorldReader.loadUrl( 'assets/tut06.rtw', function ( err, worldNode ) {
-
-        if ( err )
-            throw err;
+    RTWorldReader.loadUrl( 'assets/tut06.rtw' ).then( function ( worldNode ) {
 
         var world = new RTWorldReader.ThreeEntity( worldNode );
         scene.add( world );
