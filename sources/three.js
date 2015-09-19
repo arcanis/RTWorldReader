@@ -230,8 +230,6 @@ exports.ThreeEntity.prototype._createImage = function ( data, width, height, for
     destination.data.set( x );
     context.putImageData( destination, 0, 0 );
 
-    console.log( destination.data );
-
     return canvas;
 
 };
@@ -281,8 +279,6 @@ exports.ThreeEntity.prototype._loadXtraLightmaps = function ( lightmapNodes ) {
             2 : exports.ThreeEntity.FORMAT_32BF,
             3 : exports.ThreeEntity.FORMAT_8BM
         }[ format ], true );
-
-        console.log( texture.image.data );
 
         texture.needsUpdate = true;
 

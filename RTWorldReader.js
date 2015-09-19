@@ -236,7 +236,6 @@
       var x = this._createTexture(data, width, height, format, false).image.data;
       destination.data.set(x);
       context.putImageData(destination, 0, 0);
-      console.log(destination.data);
       return canvas;
     };
     exports.ThreeEntity.prototype._loadXtraTextures = function (textureNodes) {
@@ -269,7 +268,6 @@
             2: exports.ThreeEntity.FORMAT_32BF,
             3: exports.ThreeEntity.FORMAT_8BM
           }[format], true);
-        console.log(texture.image.data);
         texture.needsUpdate = true;
       }, this);
     };
